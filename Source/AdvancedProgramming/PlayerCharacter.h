@@ -1,11 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "PlayerCharacter.generated.h"
 
-// forward-declares for types used only as pointers/references
+// Forward declarations
 class UCameraComponent;
 class USkeletalMeshComponent;
 class UInputMappingContext;
@@ -17,7 +16,7 @@ class ADVANCEDPROGRAMMING_API APlayerCharacter : public ACharacter
 {
     GENERATED_BODY()
 
-    /** 1st-person arms mesh (only visible to self) */
+    /** 1st-person arms mesh (only visible to owning player) */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Mesh, meta=(AllowPrivateAccess="true"))
     USkeletalMeshComponent* Mesh1P;
 
@@ -29,21 +28,28 @@ class ADVANCEDPROGRAMMING_API APlayerCharacter : public ACharacter
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess="true"))
     UInputMappingContext* DefaultMappingContext;
 
-    /** Movement inputs */
+    /** Movement/look/jump/sprint actions */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess="true"))
     UInputAction* MoveAction;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess="true"))
     UInputAction* LookAction;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess="true"))
     UInputAction* JumpAction;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess="true"))
     UInputAction* SprintAction;
 
     /** Sprint settings */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Movement, meta=(AllowPrivateAccess="true"))
     float SprintMultiplier = 2.0f;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Movement, meta=(AllowPrivateAccess="true"))
     float SprintDuration   = 3.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Movement, meta=(AllowPrivateAccess="true"))
+    float SprintCooldown   = 2.0f;
 
 public:
     APlayerCharacter();
@@ -57,9 +63,13 @@ protected:
     void Look(const FInputActionValue& Value);
     void StartSprint();
     void StopSprint();
+    void ResetSprintCooldown();
 
 private:
     float DefaultMaxWalkSpeed;
     bool  bIsSprinting = false;
+    bool  bCanSprint   = true;
+
     FTimerHandle SprintTimerHandle;
+    FTimerHandle CooldownTimerHandle;
 };
