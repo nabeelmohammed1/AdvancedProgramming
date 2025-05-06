@@ -73,11 +73,11 @@ void APlayerCharacter::BeginPlay()
     }
 }
 
-void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* InputComponent)
+void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-    Super::SetupPlayerInputComponent(InputComponent);
+    Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-    if (auto EnhancedInput = Cast<UEnhancedInputComponent>(InputComponent))
+    if (auto EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent))
     {
         // Jump
         EnhancedInput->BindAction(JumpAction,   ETriggerEvent::Started,   this, &ACharacter::Jump);
