@@ -1,55 +1,50 @@
-// EnemyCharacter.h
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "EnemyCharacter.generated.h"
+#include "EnemyCharacter1.generated.h"
 
 class APlayerCharacter;
 class AAIController;
+struct FTimerHandle;
 
 UCLASS()
-class ADVANCEDPROGRAMMING_API AEnemyCharacter : public ACharacter
+class ADVANCEDPROGRAMMING_API AEnemyCharacter1 : public ACharacter
 {
     GENERATED_BODY()
 
 public:
-    AEnemyCharacter();
+    AEnemyCharacter1();
 
 protected:
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
 
     /** Roam settings */
-    UPROPERTY(EditAnywhere, Category = "AI")
+    UPROPERTY(EditAnywhere, Category="AI")
     float RoamRadius = 800.f;
 
-    UPROPERTY(EditAnywhere, Category = "AI")
+    UPROPERTY(EditAnywhere, Category="AI")
     float RoamInterval = 5.f;
 
-    /** Player detection */
-    UPROPERTY(EditAnywhere, Category = "AI")
+    /** Detection radius for the player */
+    UPROPERTY(EditAnywhere, Category="AI")
     float DetectionRadius = 1000.f;
 
 private:
-    /** Current player pawn */
+    /** Cached player pawn */
     APlayerCharacter* PlayerPawn;
 
-    /** AI controller reference */
+    /** AI controller */
     AAIController* AICon;
 
-    /** Roam timer */
+    /** Timer handle for roaming */
     FTimerHandle RoamTimerHandle;
 
-    /** Are we currently chasing the player? */
+    /** Are we currently chasing? */
     bool bChasing = false;
 
-    /** Initiate a roam to a random point */
     void Roam();
-
-    /** Begin chasing the player */
     void StartChase();
-
-    /** Stop chasing and resume roaming */
     void StopChase();
 };
