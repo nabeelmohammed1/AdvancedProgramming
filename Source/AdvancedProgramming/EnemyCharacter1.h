@@ -1,10 +1,10 @@
+// EnemyCharacter1.h
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "EnemyCharacter1.generated.h"
 
-class APlayerCharacter;
 class AAIController;
 struct FTimerHandle;
 
@@ -31,20 +31,27 @@ protected:
     UPROPERTY(EditAnywhere, Category="AI")
     float DetectionRadius = 1000.f;
 
-private:
-    /** Cached player pawn */
-    APlayerCharacter* PlayerPawn;
+    /** Enemy max health */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
+    float MaxHealth = 100.f;
 
-    /** AI controller */
+    /** Current health */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats")
+    float CurrentHealth;
+
+private:
+    /** Cached AI controller */
     AAIController* AICon;
 
     /** Timer handle for roaming */
     FTimerHandle RoamTimerHandle;
 
-    /** Are we currently chasing? */
     bool bChasing = false;
 
     void Roam();
     void StartChase();
     void StopChase();
+
+    /** Handle damage */
+    virtual float TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 };
