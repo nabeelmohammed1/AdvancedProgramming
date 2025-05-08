@@ -6,6 +6,7 @@
 #include "NavigationSystem.h"
 #include "TimerManager.h"
 #include "Engine/Engine.h"
+#include "EndlessShooterGameMode.h"    // ← add this
 
 AEnemyCharacter1::AEnemyCharacter1()
 {

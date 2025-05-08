@@ -1,5 +1,6 @@
 // Projectile.h
 #pragma once
+
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Projectile.generated.h"
@@ -15,7 +16,6 @@ class ADVANCEDPROGRAMMING_API AProjectile : public AActor
 public:
     AProjectile();
 
-    /** Damage this projectile deals */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
     float Damage = 25.f;
 

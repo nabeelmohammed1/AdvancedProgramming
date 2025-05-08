@@ -1,12 +1,11 @@
+// PlayerCharacter.h
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "PlayerCharacter.generated.h"
 
-// Forward declarations
 class UCameraComponent;
-class USkeletalMeshComponent;
 class USceneComponent;
 class UInputMappingContext;
 class UInputAction;
@@ -14,33 +13,34 @@ struct FInputActionValue;
 class AProjectile;
 class USoundBase;
 class UAnimMontage;
+class UStaticMeshComponent;
 
 UCLASS(config=Game)
 class ADVANCEDPROGRAMMING_API APlayerCharacter : public ACharacter
 {
     GENERATED_BODY()
 
-    /** 1st-person arms mesh (only visible to owning player) */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Mesh, meta=(AllowPrivateAccess="true"))
+    /** First-person mesh: arms */
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category=Mesh, meta=(AllowPrivateAccess="true"))
     USkeletalMeshComponent* Mesh1P;
 
     /** First-person camera */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera, meta=(AllowPrivateAccess="true"))
     UCameraComponent* FirstPersonCameraComponent;
 
-    /** Gun mesh (first-person view) */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Gun, meta=(AllowPrivateAccess="true"))
+    /** Gun mesh (static mesh view) - assignable in editor */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gun, meta=(AllowPrivateAccess="true"))
     USkeletalMeshComponent* GunMesh;
 
-    /** Muzzle location for spawning projectiles */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Gun, meta=(AllowPrivateAccess="true"))
+    /** Muzzle location for spawning projectiles - movable in editor */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gun, meta=(AllowPrivateAccess="true"))
     USceneComponent* MuzzleLocation;
 
     /** Enhanced Input mapping context */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess="true"))
     UInputMappingContext* DefaultMappingContext;
 
-    /** Move/look/jump/sprint/fire actions */
+    /** Input actions */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess="true"))
     UInputAction* MoveAction;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess="true"))
@@ -52,34 +52,36 @@ class ADVANCEDPROGRAMMING_API APlayerCharacter : public ACharacter
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess="true"))
     UInputAction* FireAction;
 
-    /** Sprint settings */
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Movement, meta=(AllowPrivateAccess="true"))
-    float SprintMultiplier = 2.0f;
+public:
+    APlayerCharacter();
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Movement, meta=(AllowPrivateAccess="true"))
-    float SprintDuration = 3.0f;
+    /** Maximum health */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Stats)
+    float MaxHealth = 100.f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Movement, meta=(AllowPrivateAccess="true"))
-    float SprintCooldown = 2.0f;
+    /** Current health */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Stats)
+    float CurrentHealth;
 
-    /** Projectile to spawn */
-    UPROPERTY(EditDefaultsOnly, Category=Gameplay)
+    /** Damage each projectile deals */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Combat)
+    float ProjectileDamage = 25.f;
+
+    /** Projectile class to spawn */
+    UPROPERTY(EditDefaultsOnly, Category=Combat)
     TSubclassOf<AProjectile> ProjectileClass;
 
     /** Sound to play on fire */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay, meta=(AllowPrivateAccess="true"))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Combat)
     USoundBase* FireSound;
 
     /** Animation to play on fire */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay, meta=(AllowPrivateAccess="true"))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Combat)
     UAnimMontage* FireAnimation;
 
     /** Fire rate (seconds between shots) */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay, meta=(AllowPrivateAccess="true"))
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Combat)
     float FireRate = 0.2f;
-
-public:
-    APlayerCharacter();
 
 protected:
     virtual void NotifyControllerChanged() override;
@@ -95,9 +97,17 @@ protected:
 
 private:
     float DefaultMaxWalkSpeed;
-    bool  bIsSprinting = false;
-    bool  bCanSprint   = true;
+    bool bIsSprinting = false;
+    bool bCanSprint = true;
     float LastFireTime = 0.f;
+
+    /** Sprint timings */
+    UPROPERTY(EditAnywhere, Category=Movement)
+    float SprintMultiplier = 2.0f;
+    UPROPERTY(EditAnywhere, Category=Movement)
+    float SprintDuration = 3.0f;
+    UPROPERTY(EditAnywhere, Category=Movement)
+    float SprintCooldown = 2.0f;
 
     FTimerHandle SprintTimerHandle;
     FTimerHandle CooldownTimerHandle;
