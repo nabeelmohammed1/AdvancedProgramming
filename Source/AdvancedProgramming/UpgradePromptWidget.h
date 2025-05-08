@@ -16,7 +16,7 @@ public:
     virtual bool Initialize() override;
 
 protected:
-    // bind these in your UMG designer
+    // bind these in your UMG designer (buttons named exactly)
     UPROPERTY(meta=(BindWidget))
     UButton* HealthButton;
 

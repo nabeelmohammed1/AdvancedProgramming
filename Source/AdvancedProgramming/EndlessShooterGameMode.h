@@ -14,11 +14,19 @@ class ADVANCEDPROGRAMMING_API AEndlessShooterGameMode : public AGameModeBase
 public:
     // Called by enemies when they die
     void RegisterEnemyKill();
+    // Called by destructible objects when destroyed
+    void RegisterObjectDestruction();
+    // Called by widget when upgrade selection completes
+    void NotifyUpgradeComplete();
 
 protected:
     // how many kills before asking
     UPROPERTY(EditDefaultsOnly, Category="Upgrades")
     int32 KillsForUpgrade = 10;
+
+    // how many destructions before asking
+    UPROPERTY(EditDefaultsOnly, Category="Upgrades")
+    int32 DestructionsForUpgrade = 5;
 
     // the widget BP you made that has two buttons
     UPROPERTY(EditDefaultsOnly, Category="UI")
@@ -26,6 +34,7 @@ protected:
 
 private:
     int32 KillCount = 0;
+    int32 DestructionCount = 0;
     UUpgradePromptWidget* ActiveWidget = nullptr;
 
     void TryTriggerUpgrade();
