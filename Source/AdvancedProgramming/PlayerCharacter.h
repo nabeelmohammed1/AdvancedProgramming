@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PlayerHUDWidget.h"
 #include "GameFramework/Character.h"
 #include "PlayerCharacter.generated.h"
 
@@ -63,6 +64,10 @@ public:
     /** Current health */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Stats)
     float CurrentHealth;
+    
+    virtual float TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+        void Die();
 
     /** Damage each projectile deals */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Combat)
@@ -104,6 +109,15 @@ protected:
     void OnFire();
     void FireOneBurstShot();
     void ResetSprintCooldown();
+    // HUD
+       UPROPERTY(EditAnywhere, Category = "UI")
+       TSubclassOf<UPlayerHUDWidget> HUDWidgetClass;
+
+       UPlayerHUDWidget* HUDWidget;
+
+       // Burst count
+       UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+       int32 BurstCount = 1;
 
 private:
     float DefaultMaxWalkSpeed;

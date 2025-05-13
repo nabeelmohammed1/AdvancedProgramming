@@ -1,6 +1,7 @@
 // PlayerCharacter.cpp
 #include "PlayerCharacter.h"
 #include "Projectile.h"
+#include "PlayerHUDWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -56,6 +57,22 @@ void APlayerCharacter::BeginPlay()
     DefaultMaxWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
     bCanSprint = true;
     CurrentHealth = MaxHealth;
+    // Create and add HUD
+    if (HUDWidgetClass)
+        {
+            if (APlayerController* PC = Cast<APlayerController>(GetController()))
+            {
+                HUDWidget = CreateWidget<UPlayerHUDWidget>(PC, HUDWidgetClass);
+                if (HUDWidget)
+                {
+                    HUDWidget->AddToViewport();
+                    
+                    // initialize with your current values
+                    HUDWidget->UpdateHealth(CurrentHealth, MaxHealth);
+                    HUDWidget->UpdateStats(ProjectileDamage, BurstCount);
+                }
+            }
+        }
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -164,3 +181,43 @@ void APlayerCharacter::StopSprint()
 }
 
 void APlayerCharacter::ResetSprintCooldown() { bCanSprint = true; }
+
+float APlayerCharacter::TakeDamage(float DamageAmount,
+                                   const FDamageEvent& DamageEvent,
+                                   AController* EventInstigator,
+                                   AActor* DamageCauser)
+{
+    float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+    if (ActualDamage <= 0.f)
+        return 0.f;
+    
+    CurrentHealth -= ActualDamage;
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red,
+                                         FString::Printf(TEXT("Player took %.1f damage. HP: %.1f"), ActualDamage, CurrentHealth));
+    }
+    
+    if (HUDWidget)
+    {
+        HUDWidget->UpdateHealth(CurrentHealth, MaxHealth);
+    }
+
+    
+    if (CurrentHealth <= 0.f)
+    {
+        Die();
+    }
+    
+    return ActualDamage;
+}
+    
+    void APlayerCharacter::Die()
+    {
+        if (APlayerController* PC = Cast<APlayerController>(GetController()))
+        {
+            PC->DisableInput(PC);
+        }
+        // Optional: play death animation, ragdoll, UI, etc.
+        Destroy();
+    }
