@@ -16,12 +16,15 @@ public:
     virtual bool Initialize() override;
 
 protected:
-    // bind these in your UMG designer (buttons named exactly)
+    // Bind these exact names in your UMG Designer
     UPROPERTY(meta=(BindWidget))
     UButton* HealthButton;
 
     UPROPERTY(meta=(BindWidget))
     UButton* WeaponButton;
+
+    UPROPERTY(meta=(BindWidget))
+    UButton* BurstButton;
 
 private:
     UFUNCTION()
@@ -29,4 +32,7 @@ private:
 
     UFUNCTION()
     void OnWeaponClicked();
+
+    UFUNCTION()
+    void OnBurstClicked();
 };

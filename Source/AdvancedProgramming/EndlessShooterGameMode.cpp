@@ -21,6 +21,7 @@ void AEndlessShooterGameMode::TryTriggerUpgrade()
     if (!ActiveWidget && (KillCount >= KillsForUpgrade || DestructionCount >= DestructionsForUpgrade))
     {
         ShowUpgradePrompt();
+        // reset counters only after showing
         KillCount = 0;
         DestructionCount = 0;
     }
@@ -37,7 +38,7 @@ void AEndlessShooterGameMode::ShowUpgradePrompt()
         if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
         {
             PC->bShowMouseCursor = true;
-            PC->SetInputMode(FInputModeUIOnly());
+            PC->SetInputMode(FInputModeUIOnly().SetWidgetToFocus(ActiveWidget->TakeWidget()));
         }
         UGameplayStatics::SetGamePaused(this, true);
     }

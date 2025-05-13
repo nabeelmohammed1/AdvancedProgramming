@@ -17,43 +17,32 @@
 
 APlayerCharacter::APlayerCharacter()
 {
-    // Capsule size
     GetCapsuleComponent()->InitCapsuleSize(55.f, 96.f);
-
-    // Camera
     FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
     FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
     FirstPersonCameraComponent->SetRelativeLocation(FVector(0.f, 0.f, 64.f));
     FirstPersonCameraComponent->bUsePawnControlRotation = true;
-
-    // Arms mesh
     Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ArmMesh1P"));
     Mesh1P->SetOnlyOwnerSee(true);
     Mesh1P->SetupAttachment(FirstPersonCameraComponent);
     Mesh1P->bCastDynamicShadow = false;
     Mesh1P->CastShadow = false;
-
-    // Gun static mesh
-    GunMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("GunMesh"));
+    GunMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GunMesh"));
+    GunMesh->SetupAttachment(Mesh1P, TEXT("GripPoint"));
     GunMesh->SetOnlyOwnerSee(true);
     GunMesh->bCastDynamicShadow = false;
     GunMesh->CastShadow = false;
-    GunMesh->SetupAttachment(Mesh1P, TEXT("GripPoint"));
-
-    // Muzzle location, editable offset
     MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
     MuzzleLocation->SetupAttachment(GunMesh);
-    MuzzleLocation->SetRelativeLocation(FVector(0.f, 50.f, 10.f)); // default forward offset
+    MuzzleLocation->SetRelativeLocation(FVector(0.f, 50.f, 10.f));
 }
 
 void APlayerCharacter::NotifyControllerChanged()
 {
     Super::NotifyControllerChanged();
     if (APlayerController* PC = Cast<APlayerController>(Controller))
-    {
         if (auto Sub = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
             Sub->AddMappingContext(DefaultMappingContext, 0);
-    }
 }
 
 void APlayerCharacter::BeginPlay()
@@ -99,19 +88,25 @@ void APlayerCharacter::OnFire()
     if (!ProjectileClass || Now - LastFireTime < FireRate) return;
 
     FVector Forward = FirstPersonCameraComponent->GetComponentRotation().Vector();
-    FVector SpawnLoc = MuzzleLocation->GetComponentLocation();
+    FVector SpawnLocBase = MuzzleLocation->GetComponentLocation();
     FRotator SpawnRot = FirstPersonCameraComponent->GetComponentRotation();
 
-    FActorSpawnParameters Params;
-    Params.Owner = this;
-    Params.Instigator = this;
-
-    AProjectile* Proj = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, SpawnLoc, SpawnRot, Params);
-    if (Proj)
+    for (int32 i = 0; i < ShotsPerBurst; ++i)
     {
-        Proj->Damage = ProjectileDamage;
-        if (auto MoveComp = Proj->FindComponentByClass<UProjectileMovementComponent>())
-            MoveComp->Velocity = Forward * MoveComp->InitialSpeed;
+        FVector Offset = FVector(0.f, (i - (ShotsPerBurst-1)/2.0f) * 5.f, 0.f);
+        FVector SpawnLoc = SpawnLocBase + FirstPersonCameraComponent->GetRightVector() * Offset.Y;
+
+        FActorSpawnParameters Params;
+        Params.Owner = this;
+        Params.Instigator = this;
+
+        AProjectile* Proj = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, SpawnLoc, SpawnRot, Params);
+        if (Proj)
+        {
+            Proj->Damage = ProjectileDamage;
+            if (auto MoveComp = Proj->FindComponentByClass<UProjectileMovementComponent>())
+                MoveComp->Velocity = Forward * MoveComp->InitialSpeed;
+        }
     }
 
     LastFireTime = Now;

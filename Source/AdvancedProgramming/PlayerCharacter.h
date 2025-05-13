@@ -30,7 +30,7 @@ class ADVANCEDPROGRAMMING_API APlayerCharacter : public ACharacter
 
     /** Gun mesh (static mesh view) - assignable in editor */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gun, meta=(AllowPrivateAccess="true"))
-    USkeletalMeshComponent* GunMesh;
+    UStaticMeshComponent* GunMesh;
 
     /** Muzzle location for spawning projectiles - movable in editor */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gun, meta=(AllowPrivateAccess="true"))
@@ -67,6 +67,10 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Combat)
     float ProjectileDamage = 25.f;
 
+    /** Number of shots fired per trigger pull (burst count) */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Combat, meta=(ClampMin="1", ClampMax="3"))
+    int32 ShotsPerBurst = 1;
+
     /** Projectile class to spawn */
     UPROPERTY(EditDefaultsOnly, Category=Combat)
     TSubclassOf<AProjectile> ProjectileClass;
@@ -79,7 +83,7 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Combat)
     UAnimMontage* FireAnimation;
 
-    /** Fire rate (seconds between shots) */
+    /** Fire rate (seconds between bursts) */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Combat)
     float FireRate = 0.2f;
 
@@ -109,6 +113,7 @@ private:
     UPROPERTY(EditAnywhere, Category=Movement)
     float SprintCooldown = 2.0f;
 
+    /** Handles for sprint timers */
     FTimerHandle SprintTimerHandle;
     FTimerHandle CooldownTimerHandle;
 };

@@ -1,9 +1,9 @@
 // UpgradePromptWidget.cpp
 #include "UpgradePromptWidget.h"
 #include "EndlessShooterGameMode.h"
-#include "Components/Button.h"
-#include "Kismet/GameplayStatics.h"
 #include "PlayerCharacter.h"
+#include "Kismet/GameplayStatics.h"
+#include "Components/Button.h"
 
 bool UUpgradePromptWidget::Initialize()
 {
@@ -13,6 +13,8 @@ bool UUpgradePromptWidget::Initialize()
         HealthButton->OnClicked.AddDynamic(this, &UUpgradePromptWidget::OnHealthClicked);
     if (WeaponButton)
         WeaponButton->OnClicked.AddDynamic(this, &UUpgradePromptWidget::OnWeaponClicked);
+    if (BurstButton)
+        BurstButton->OnClicked.AddDynamic(this, &UUpgradePromptWidget::OnBurstClicked);
 
     return true;
 }
@@ -44,3 +46,16 @@ void UUpgradePromptWidget::OnWeaponClicked()
     }
 }
 
+void UUpgradePromptWidget::OnBurstClicked()
+{
+    if (auto GM = Cast<AEndlessShooterGameMode>(UGameplayStatics::GetGameMode(this)))
+    {
+        if (auto PC = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(this, 0)))
+        {
+            // Increment burst count: 1->2->3 max
+            PC->ShotsPerBurst = FMath::Clamp(PC->ShotsPerBurst + 1, 1, 3);
+        }
+        GM->NotifyUpgradeComplete();
+        RemoveFromParent();
+    }
+}

@@ -28,7 +28,7 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category="Upgrades")
     int32 DestructionsForUpgrade = 5;
 
-    // the widget BP you made that has two buttons
+    // the widget BP you made that has three buttons now
     UPROPERTY(EditDefaultsOnly, Category="UI")
     TSubclassOf<UUpgradePromptWidget> UpgradeWidgetClass;
 
