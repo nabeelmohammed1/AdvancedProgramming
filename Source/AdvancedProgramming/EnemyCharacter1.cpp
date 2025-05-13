@@ -1,12 +1,13 @@
 // EnemyCharacter1.cpp
+
 #include "EnemyCharacter1.h"
-#include "Kismet/GameplayStatics.h"
 #include "AIController.h"
-#include "PlayerCharacter.h"
+#include "Kismet/GameplayStatics.h"
 #include "NavigationSystem.h"
 #include "TimerManager.h"
 #include "Engine/Engine.h"
-#include "EndlessShooterGameMode.h"    // ← add this
+#include "EnemyProjectile.h"
+#include "EndlessShooterGameMode.h"
 
 AEnemyCharacter1::AEnemyCharacter1()
 {
@@ -22,7 +23,9 @@ void AEnemyCharacter1::BeginPlay()
     CurrentHealth = MaxHealth;
     AICon = Cast<AAIController>(GetController());
 
-    GetWorldTimerManager().SetTimer(RoamTimerHandle, this, &AEnemyCharacter1::Roam, RoamInterval, true, 0.f);
+    // kick off roaming
+    GetWorldTimerManager()
+        .SetTimer(RoamTimerHandle, this, &AEnemyCharacter1::Roam, RoamInterval, true, 0.f);
 }
 
 void AEnemyCharacter1::Tick(float DeltaTime)
@@ -33,24 +36,71 @@ void AEnemyCharacter1::Tick(float DeltaTime)
     APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
     if (!PlayerPawn) return;
 
-    const float Dist = FVector::Dist(GetActorLocation(), PlayerPawn->GetActorLocation());
-    const bool bCanSee = Dist <= DetectionRadius && AICon->LineOfSightTo(PlayerPawn);
+    float Dist = FVector::Dist(GetActorLocation(), PlayerPawn->GetActorLocation());
+    bool bCanSee = Dist <= DetectionRadius && AICon->LineOfSightTo(PlayerPawn);
 
     if (bCanSee && !bChasing)
         StartChase();
     else if (!bCanSee && bChasing)
         StopChase();
+
+    if (bChasing)
+    {
+        float Now = GetWorld()->GetTimeSeconds();
+
+        if (bIsMelee)
+        {
+            // melee attack
+            if (Dist <= MeleeRange && Now - LastMeleeTime >= MeleeAttackInterval)
+            {
+                UGameplayStatics::ApplyDamage(PlayerPawn, MeleeDamage, AICon, this, nullptr);
+
+                if (GEngine)
+                    GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red,
+                        FString::Printf(TEXT("Enemy melee hits %.1f"), MeleeDamage));
+
+                LastMeleeTime = Now;
+            }
+        }
+        else
+        {
+            // ranged attack
+            if (RangedProjectileClass && Now - LastRangedTime >= RangedAttackInterval)
+            {
+                FVector MuzzleWorld = GetActorLocation()
+                    + GetActorRotation().RotateVector(RangedMuzzleOffset);
+
+                // aim at player
+                FVector Dir = (PlayerPawn->GetActorLocation() - MuzzleWorld).GetSafeNormal();
+                FRotator ProjRot = Dir.Rotation();
+
+                FActorSpawnParameters P;
+                P.Owner = this;
+
+                if (auto Proj = GetWorld()->SpawnActor<AEnemyProjectile>(
+                        RangedProjectileClass, MuzzleWorld, ProjRot, P))
+                {
+                    // debug
+                    if (GEngine)
+                        GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Yellow,
+                            TEXT("Enemy fires projectile!"));
+                }
+
+                LastRangedTime = Now;
+            }
+        }
+    }
 }
 
 void AEnemyCharacter1::Roam()
 {
     if (bChasing || !AICon) return;
 
-    FNavLocation Dest;
-    if (UNavigationSystemV1* Nav = UNavigationSystemV1::GetCurrent(GetWorld()))
+    if (UNavigationSystemV1* Nav = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld()))
     {
-        if (Nav->GetRandomPointInNavigableRadius(GetActorLocation(), RoamRadius, Dest))
-            AICon->MoveToLocation(Dest.Location);
+        FNavLocation RandPt;
+        if (Nav->GetRandomPointInNavigableRadius(GetActorLocation(), RoamRadius, RandPt))
+            AICon->MoveToLocation(RandPt.Location);
     }
 }
 
@@ -58,40 +108,39 @@ void AEnemyCharacter1::StartChase()
 {
     bChasing = true;
     GetWorldTimerManager().ClearTimer(RoamTimerHandle);
+
     APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
     if (PlayerPawn)
-        AICon->MoveToActor(PlayerPawn, 5.f);
+        AICon->MoveToActor(PlayerPawn, bIsMelee ? MeleeRange : 5.f);
 }
 
 void AEnemyCharacter1::StopChase()
 {
     bChasing = false;
     AICon->StopMovement();
-    GetWorldTimerManager().SetTimer(RoamTimerHandle, this, &AEnemyCharacter1::Roam, RoamInterval, true, 0.f);
+    GetWorldTimerManager()
+        .SetTimer(RoamTimerHandle, this, &AEnemyCharacter1::Roam, RoamInterval, true, 0.f);
 }
 
-float AEnemyCharacter1::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+float AEnemyCharacter1::TakeDamage(float DamageAmount,
+                                  const FDamageEvent& DamageEvent,
+                                  AController* EventInstigator,
+                                  AActor* DamageCauser)
 {
-    float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-    if (ActualDamage <= 0.f) return 0.f;
+    float Actual = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+    if (Actual <= 0.f) return 0.f;
 
-    CurrentHealth -= ActualDamage;
-    // Print new health
+    CurrentHealth -= Actual;
     if (GEngine)
-    {
         GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Blue,
-            FString::Printf(TEXT("Enemy health: %.1f"), CurrentHealth));
-    }
+            FString::Printf(TEXT("Enemy HP: %.1f"), CurrentHealth));
 
     if (CurrentHealth <= 0.f)
     {
-        // notify GM that we died
         if (auto GM = Cast<AEndlessShooterGameMode>(UGameplayStatics::GetGameMode(this)))
-        {
             GM->RegisterEnemyKill();
-        }
 
         Destroy();
     }
-    return ActualDamage;
+    return Actual;
 }

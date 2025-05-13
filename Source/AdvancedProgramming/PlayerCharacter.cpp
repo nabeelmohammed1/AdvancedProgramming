@@ -14,24 +14,29 @@
 #include "TimerManager.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Components/PrimitiveComponent.h"
 
 APlayerCharacter::APlayerCharacter()
 {
     GetCapsuleComponent()->InitCapsuleSize(55.f, 96.f);
+
     FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
     FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
     FirstPersonCameraComponent->SetRelativeLocation(FVector(0.f, 0.f, 64.f));
     FirstPersonCameraComponent->bUsePawnControlRotation = true;
+
     Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ArmMesh1P"));
     Mesh1P->SetOnlyOwnerSee(true);
     Mesh1P->SetupAttachment(FirstPersonCameraComponent);
     Mesh1P->bCastDynamicShadow = false;
     Mesh1P->CastShadow = false;
-    GunMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GunMesh"));
+
+    GunMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("GunMesh"));
     GunMesh->SetupAttachment(Mesh1P, TEXT("GripPoint"));
     GunMesh->SetOnlyOwnerSee(true);
     GunMesh->bCastDynamicShadow = false;
     GunMesh->CastShadow = false;
+
     MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
     MuzzleLocation->SetupAttachment(GunMesh);
     MuzzleLocation->SetRelativeLocation(FVector(0.f, 50.f, 10.f));
@@ -87,32 +92,59 @@ void APlayerCharacter::OnFire()
     float Now = GetWorld()->GetTimeSeconds();
     if (!ProjectileClass || Now - LastFireTime < FireRate) return;
 
-    FVector Forward = FirstPersonCameraComponent->GetComponentRotation().Vector();
-    FVector SpawnLocBase = MuzzleLocation->GetComponentLocation();
-    FRotator SpawnRot = FirstPersonCameraComponent->GetComponentRotation();
+    // initialize burst
+    BurstShotsRemaining = ShotsPerBurst;
 
-    for (int32 i = 0; i < ShotsPerBurst; ++i)
+    // fire first shot immediately
+    FireOneBurstShot();
+
+    // schedule remaining shots
+    if (BurstShotsRemaining > 0)
     {
-        FVector Offset = FVector(0.f, (i - (ShotsPerBurst-1)/2.0f) * 5.f, 0.f);
-        FVector SpawnLoc = SpawnLocBase + FirstPersonCameraComponent->GetRightVector() * Offset.Y;
-
-        FActorSpawnParameters Params;
-        Params.Owner = this;
-        Params.Instigator = this;
-
-        AProjectile* Proj = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, SpawnLoc, SpawnRot, Params);
-        if (Proj)
-        {
-            Proj->Damage = ProjectileDamage;
-            if (auto MoveComp = Proj->FindComponentByClass<UProjectileMovementComponent>())
-                MoveComp->Velocity = Forward * MoveComp->InitialSpeed;
-        }
+        GetWorldTimerManager().SetTimer(BurstTimerHandle, this, &APlayerCharacter::FireOneBurstShot, BurstShotInterval, true);
     }
 
     LastFireTime = Now;
-    if (FireSound) UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+
+    if (FireSound)
+        UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
     if (FireAnimation && Mesh1P->GetAnimInstance())
         Mesh1P->GetAnimInstance()->Montage_Play(FireAnimation, 1.f);
+}
+
+void APlayerCharacter::FireOneBurstShot()
+{
+    if (BurstShotsRemaining <= 0)
+    {
+        GetWorldTimerManager().ClearTimer(BurstTimerHandle);
+        return;
+    }
+
+    FVector Forward = FirstPersonCameraComponent->GetComponentRotation().Vector();
+    FVector SpawnLoc = MuzzleLocation->GetComponentLocation();
+    FRotator SpawnRot = FirstPersonCameraComponent->GetComponentRotation();
+
+    FActorSpawnParameters Params;
+    Params.Owner = this;
+    Params.Instigator = this;
+
+    if (AProjectile* Proj = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, SpawnLoc, SpawnRot, Params))
+    {
+        // ignore collision with self
+        if (auto CollComp = Cast<UPrimitiveComponent>(Proj->GetRootComponent()))
+            CollComp->IgnoreActorWhenMoving(this, true);
+
+        // set damage and velocity
+        Proj->Damage = ProjectileDamage;
+        if (auto MoveComp = Proj->FindComponentByClass<UProjectileMovementComponent>())
+            MoveComp->Velocity = Forward * MoveComp->InitialSpeed;
+    }
+
+    BurstShotsRemaining--;
+    if (BurstShotsRemaining <= 0)
+    {
+        GetWorldTimerManager().ClearTimer(BurstTimerHandle);
+    }
 }
 
 void APlayerCharacter::StartSprint()

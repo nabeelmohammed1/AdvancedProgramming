@@ -14,6 +14,7 @@ class AProjectile;
 class USoundBase;
 class UAnimMontage;
 class UStaticMeshComponent;
+class UPrimitiveComponent;
 
 UCLASS(config=Game)
 class ADVANCEDPROGRAMMING_API APlayerCharacter : public ACharacter
@@ -30,7 +31,7 @@ class ADVANCEDPROGRAMMING_API APlayerCharacter : public ACharacter
 
     /** Gun mesh (static mesh view) - assignable in editor */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gun, meta=(AllowPrivateAccess="true"))
-    UStaticMeshComponent* GunMesh;
+    USkeletalMeshComponent* GunMesh;
 
     /** Muzzle location for spawning projectiles - movable in editor */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gun, meta=(AllowPrivateAccess="true"))
@@ -71,6 +72,10 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Combat, meta=(ClampMin="1", ClampMax="3"))
     int32 ShotsPerBurst = 1;
 
+    /** Time between burst shots */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Combat)
+    float BurstShotInterval = 0.1f;
+
     /** Projectile class to spawn */
     UPROPERTY(EditDefaultsOnly, Category=Combat)
     TSubclassOf<AProjectile> ProjectileClass;
@@ -97,6 +102,7 @@ protected:
     void StartSprint();
     void StopSprint();
     void OnFire();
+    void FireOneBurstShot();
     void ResetSprintCooldown();
 
 private:
@@ -112,6 +118,10 @@ private:
     float SprintDuration = 3.0f;
     UPROPERTY(EditAnywhere, Category=Movement)
     float SprintCooldown = 2.0f;
+
+    /** Burst firing state */
+    int32 BurstShotsRemaining = 0;
+    FTimerHandle BurstTimerHandle;
 
     /** Handles for sprint timers */
     FTimerHandle SprintTimerHandle;
