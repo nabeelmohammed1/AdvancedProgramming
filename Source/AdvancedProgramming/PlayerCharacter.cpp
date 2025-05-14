@@ -66,10 +66,9 @@ void APlayerCharacter::BeginPlay()
                 if (HUDWidget)
                 {
                     HUDWidget->AddToViewport();
-                    
                     // initialize with your current values
                     HUDWidget->UpdateHealth(CurrentHealth, MaxHealth);
-                    HUDWidget->UpdateStats(ProjectileDamage, BurstCount);
+                    HUDWidget->UpdateStats(ProjectileDamage, ShotsPerBurst);
                 }
             }
         }

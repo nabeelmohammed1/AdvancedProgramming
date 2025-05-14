@@ -1,10 +1,12 @@
-// PlayerHUDWidget.h
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Components/ProgressBar.h"   // <-- make sure you include this
-#include "Components/TextBlock.h"     // <-- and this
+
+// include these so HealthBar/TextBlock are full types:
+#include "Components/ProgressBar.h"
+#include "Components/TextBlock.h"
+
 #include "PlayerHUDWidget.generated.h"
 
 UCLASS()
@@ -13,8 +15,31 @@ class ADVANCEDPROGRAMMING_API UPlayerHUDWidget : public UUserWidget
     GENERATED_BODY()
 
 public:
-    // These UPROPERTYs assume you've named your UMG designer widgets exactly
-    // "HealthBar", "DamageText" and "BurstText" and checked "Is Variable".
+    // called by PlayerCharacter / UpgradePromptWidget
+    UFUNCTION(BlueprintCallable)
+    void UpdateHealth(float Current, float Max)
+    {
+        if (HealthBar)
+        {
+            HealthBar->SetPercent(Current / Max);
+        }
+    }
+
+    UFUNCTION(BlueprintCallable)
+    void UpdateStats(float Damage, int32 Burst)
+    {
+        if (DamageText)
+        {
+            DamageText->SetText(FText::AsNumber(FMath::RoundToInt(Damage)));
+        }
+        if (BurstText)
+        {
+            BurstText->SetText(FText::AsNumber(Burst));
+        }
+    }
+
+protected:
+    // these must match your UMG BindWidget names
     UPROPERTY(meta = (BindWidget))
     UProgressBar* HealthBar;
 
@@ -23,28 +48,4 @@ public:
 
     UPROPERTY(meta = (BindWidget))
     UTextBlock* BurstText;
-
-    /** Call this any time CurrentHealth or MaxHealth changes */
-    UFUNCTION(BlueprintCallable)
-    void UpdateHealth(float Current, float Max)
-    {
-        if (HealthBar && Max > 0.f)
-        {
-            HealthBar->SetPercent(FMath::Clamp(Current / Max, 0.f, 1.f));
-        }
-    }
-
-    /** Call this whenever ProjectileDamage or BurstCount changes */
-    UFUNCTION(BlueprintCallable)
-    void UpdateStats(int32 Damage, int32 Burst)
-    {
-        if (DamageText)
-        {
-            DamageText->SetText(FText::AsNumber(Damage));
-        }
-        if (BurstText)
-        {
-            BurstText->SetText(FText::AsNumber(Burst));
-        }
-    }
 };

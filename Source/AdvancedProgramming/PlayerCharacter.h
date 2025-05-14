@@ -96,6 +96,15 @@ public:
     /** Fire rate (seconds between bursts) */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Combat)
     float FireRate = 0.2f;
+    
+    /** HUD widget class to spawn */
+    UPROPERTY(EditDefaultsOnly, Category = "UI")
+    TSubclassOf<UPlayerHUDWidget> HUDWidgetClass;
+
+    /** Instance of the HUD widget */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+    UPlayerHUDWidget* HUDWidget;
+    
 
 protected:
     virtual void NotifyControllerChanged() override;
@@ -109,15 +118,10 @@ protected:
     void OnFire();
     void FireOneBurstShot();
     void ResetSprintCooldown();
-    // HUD
-       UPROPERTY(EditAnywhere, Category = "UI")
-       TSubclassOf<UPlayerHUDWidget> HUDWidgetClass;
-
-       UPlayerHUDWidget* HUDWidget;
-
-       // Burst count
-       UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
-       int32 BurstCount = 1;
+    
+    // Burst count
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+    int32 BurstCount = 1;
 
 private:
     float DefaultMaxWalkSpeed;
