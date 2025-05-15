@@ -1,4 +1,5 @@
 // EndlessShooterGameMode.cpp
+
 #include "EndlessShooterGameMode.h"
 #include "UpgradePromptWidget.h"
 #include "Kismet/GameplayStatics.h"
@@ -6,24 +7,33 @@
 
 void AEndlessShooterGameMode::RegisterEnemyKill()
 {
+    // track toward upgrade prompt
     KillCount++;
     TryTriggerUpgrade();
-}
 
-void AEndlessShooterGameMode::RegisterObjectDestruction()
-{
-    DestructionCount++;
-    TryTriggerUpgrade();
+    // track toward enemy health scaling
+    HealthKillCount++;
+    TryHealthIncrease();
 }
 
 void AEndlessShooterGameMode::TryTriggerUpgrade()
 {
-    if (!ActiveWidget && (KillCount >= KillsForUpgrade || DestructionCount >= DestructionsForUpgrade))
+    if (!ActiveWidget && KillCount >= KillsForUpgrade)
     {
         ShowUpgradePrompt();
-        // reset counters only after showing
+
+        // prepare next threshold
         KillCount = 0;
-        DestructionCount = 0;
+        KillsForUpgrade += UpgradeKillIncrement;
+    }
+}
+
+void AEndlessShooterGameMode::TryHealthIncrease()
+{
+    if (HealthKillCount >= KillsPerHealthIncrease)
+    {
+        EnemyHealthScale *= HealthIncreaseScale;
+        HealthKillCount = 0;
     }
 }
 

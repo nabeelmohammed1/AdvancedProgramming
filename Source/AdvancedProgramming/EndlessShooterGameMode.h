@@ -1,5 +1,7 @@
 // EndlessShooterGameMode.h
+
 #pragma once
+
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "EndlessShooterGameMode.generated.h"
@@ -14,29 +16,40 @@ class ADVANCEDPROGRAMMING_API AEndlessShooterGameMode : public AGameModeBase
 public:
     // Called by enemies when they die
     void RegisterEnemyKill();
-    // Called by destructible objects when destroyed
-    void RegisterObjectDestruction();
+
     // Called by widget when upgrade selection completes
     void NotifyUpgradeComplete();
+    
+    UPROPERTY(BlueprintReadOnly, Category="Upgrades|EnemyScaling")
+    float EnemyHealthScale = 1.0f;
 
 protected:
-    // how many kills before asking
-    UPROPERTY(EditDefaultsOnly, Category="Upgrades")
+    /** How many kills before asking for the first upgrade */
+    UPROPERTY(EditDefaultsOnly, Category="Upgrades|Thresholds")
     int32 KillsForUpgrade = 10;
 
-    // how many destructions before asking
-    UPROPERTY(EditDefaultsOnly, Category="Upgrades")
-    int32 DestructionsForUpgrade = 5;
+    /** After each upgrade, add this many kills to the next threshold */
+    UPROPERTY(EditDefaultsOnly, Category="Upgrades|Thresholds")
+    int32 UpgradeKillIncrement = 5;
 
-    // the widget BP you made that has three buttons now
+    /** How many kills before enemy health is bumped */
+    UPROPERTY(EditDefaultsOnly, Category="Upgrades|EnemyScaling")
+    int32 KillsPerHealthIncrease = 20;
+
+    /** Multiply enemy health by this factor each time */
+    UPROPERTY(EditDefaultsOnly, Category="Upgrades|EnemyScaling")
+    float HealthIncreaseScale = 1.2f;
+
+    /** The widget BP you made that has three buttons now */
     UPROPERTY(EditDefaultsOnly, Category="UI")
     TSubclassOf<UUpgradePromptWidget> UpgradeWidgetClass;
 
 private:
     int32 KillCount = 0;
-    int32 DestructionCount = 0;
+    int32 HealthKillCount = 0;
     UUpgradePromptWidget* ActiveWidget = nullptr;
 
     void TryTriggerUpgrade();
+    void TryHealthIncrease();
     void ShowUpgradePrompt();
 };

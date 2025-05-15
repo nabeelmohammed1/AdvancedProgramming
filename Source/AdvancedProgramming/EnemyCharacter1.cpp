@@ -20,7 +20,11 @@ void AEnemyCharacter1::BeginPlay()
 {
     Super::BeginPlay();
 
-    CurrentHealth = MaxHealth;
+    if (auto GM = Cast<AEndlessShooterGameMode>(UGameplayStatics::GetGameMode(this)))
+    {
+        float Scale = GM->EnemyHealthScale;
+        CurrentHealth = MaxHealth * Scale;
+    }
     AICon = Cast<AAIController>(GetController());
 
     // kick off roaming

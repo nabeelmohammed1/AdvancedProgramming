@@ -15,8 +15,19 @@ bool UUpgradePromptWidget::Initialize()
     if (WeaponButton)
         WeaponButton->OnClicked.AddDynamic(this, &UUpgradePromptWidget::OnWeaponClicked);
     if (BurstButton)
-        BurstButton->OnClicked.AddDynamic(this, &UUpgradePromptWidget::OnBurstClicked);
+        {
+            BurstButton->OnClicked.AddDynamic(this, &UUpgradePromptWidget::OnBurstClicked);
 
+            // Grey out or hide burst button if already at max burst
+            if (auto PC = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(this, 0)))
+            {
+                if (PC->ShotsPerBurst >= 3)
+                {
+                    BurstButton->SetIsEnabled(false);
+                    BurstButton->SetVisibility(ESlateVisibility::Collapsed);
+                }
+            }
+        }
     return true;
 }
 
@@ -71,17 +82,22 @@ void UUpgradePromptWidget::OnBurstClicked()
     {
         if (auto PC = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(this, 0)))
         {
-            // increment burst (1 → 2 → 3)
+            // Increment burst count: 1->2->3 max
             PC->ShotsPerBurst = FMath::Clamp(PC->ShotsPerBurst + 1, 1, 3);
-
-            // update HUD
+            
             if (PC->HUDWidget)
             {
                 PC->HUDWidget->UpdateStats(PC->ProjectileDamage, PC->ShotsPerBurst);
                 PC->HUDWidget->UpdateHealth(PC->CurrentHealth, PC->MaxHealth);
             }
+            
+            // Disable or hide if reached max
+            if (PC->ShotsPerBurst >= 3 && BurstButton)
+            {
+                BurstButton->SetIsEnabled(false);
+                BurstButton->SetVisibility(ESlateVisibility::Collapsed);
+            }
         }
-
         GM->NotifyUpgradeComplete();
         RemoveFromParent();
     }
