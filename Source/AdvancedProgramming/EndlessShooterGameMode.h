@@ -1,5 +1,4 @@
-// EndlessShooterGameMode.h
-
+// ======= EndlessShooterGameMode.h =======
 #pragma once
 
 #include "CoreMinimal.h"
@@ -14,12 +13,15 @@ class ADVANCEDPROGRAMMING_API AEndlessShooterGameMode : public AGameModeBase
     GENERATED_BODY()
 
 public:
-    // Called by enemies when they die
-    void RegisterEnemyKill();
+    /** Called by enemies when they die; if bIsBoss==true, applies special boss logic */
+    UFUNCTION()
+    void RegisterEnemyKill(bool bIsBoss = false);
 
-    // Called by widget when upgrade selection completes
+    /** Called by widget when upgrade selection completes */
+    UFUNCTION()
     void NotifyUpgradeComplete();
     
+    /** Global enemy health scale factor, bumps every KillsPerHealthIncrease */
     UPROPERTY(BlueprintReadOnly, Category="Upgrades|EnemyScaling")
     float EnemyHealthScale = 1.0f;
 

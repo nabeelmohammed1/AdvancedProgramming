@@ -14,15 +14,15 @@ class ADVANCEDPROGRAMMING_API AEnemyProjectile : public AActor
 
 public:
     AEnemyProjectile();
+    
+    /** Movement component to drive the projectile */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
+    UProjectileMovementComponent* ProjectileMovement;
 
 protected:
     /** Collision component for detecting hits */
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
     USphereComponent* CollisionComp;
-
-    /** Movement component to drive the projectile */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
-    UProjectileMovementComponent* ProjectileMovement;
 
     /** How much damage this projectile deals on hit */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")

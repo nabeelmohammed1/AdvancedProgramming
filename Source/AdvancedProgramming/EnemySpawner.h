@@ -1,25 +1,28 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-// EnemySpawner.h
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "EnemySpawner.generated.h"
 
-class UBoxComponent;
-
 USTRUCT(BlueprintType)
 struct FSpawnInfo
 {
     GENERATED_BODY()
 
-    /** Which enemy to spawn */
-    UPROPERTY(EditAnywhere, Category="Spawning")
+    /** What enemy class to spawn (can be regular, elite, boss) */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Spawning")
     TSubclassOf<AActor> EnemyClass;
 
-    /** World time (s) at which this entry becomes active */
-    UPROPERTY(EditAnywhere, Category="Spawning")
-    float BeginTime = 0.f;
+    /** Interval (seconds) between spawns */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Spawning")
+    float SpawnInterval = 5.f;
+
+    /** If true, only spawn once (e.g. boss) */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Spawning")
+    bool bSpawnOnce = false;
+
+    /** Internal: have we already spawned it? */
+    bool bHasSpawned = false;
 };
 
 UCLASS()
@@ -30,27 +33,17 @@ class ADVANCEDPROGRAMMING_API AEnemySpawner : public AActor
 public:
     AEnemySpawner();
 
+    /** Configure your waves, elites, bosses here */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Spawning")
+    TArray<FSpawnInfo> SpawnList;
+
 protected:
     virtual void BeginPlay() override;
 
-    /** Volume that defines where enemies may appear */
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Spawning")
-    UBoxComponent* SpawnVolume;
-
-    /** Spawn tiers: ordered by BeginTime ascending */
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Spawning")
-    TArray<FSpawnInfo> SpawnInfos;
-
-    /** Seconds between each spawn */
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Spawning", meta=(ClampMin="0.1"))
-    float SpawnInterval = 2.f;
-
 private:
-    FTimerHandle TimerHandle_Spawn;
+    /** One timer per entry in SpawnList */
+    TArray<FTimerHandle> SpawnTimers;
 
-    /** Called on each tick of the spawn timer */
-    void SpawnEnemy();
-
-    /** Find which tier is active based on world time */
-    int32 GetCurrentSpawnIndex() const;
+    /** Called by each timer to do a spawn */
+    void SpawnEnemy(int32 Index);
 };
