@@ -4,27 +4,6 @@
 #include "GameFramework/Actor.h"
 #include "EnemySpawner.generated.h"
 
-USTRUCT(BlueprintType)
-struct FSpawnInfo
-{
-    GENERATED_BODY()
-
-    /** What enemy class to spawn (can be regular, elite, boss) */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Spawning")
-    TSubclassOf<AActor> EnemyClass;
-
-    /** Interval (seconds) between spawns */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Spawning")
-    float SpawnInterval = 5.f;
-
-    /** If true, only spawn once (e.g. boss) */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Spawning")
-    bool bSpawnOnce = false;
-
-    /** Internal: have we already spawned it? */
-    bool bHasSpawned = false;
-};
-
 UCLASS()
 class ADVANCEDPROGRAMMING_API AEnemySpawner : public AActor
 {
@@ -33,17 +12,39 @@ class ADVANCEDPROGRAMMING_API AEnemySpawner : public AActor
 public:
     AEnemySpawner();
 
-    /** Configure your waves, elites, bosses here */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Spawning")
-    TArray<FSpawnInfo> SpawnList;
+    /** Your base grunt class */
+    UPROPERTY(EditInstanceOnly, Category="Spawning")
+    TSubclassOf<class AEnemyCharacter1> RegularClass;
+
+    /** Your elite variant */
+    UPROPERTY(EditInstanceOnly, Category="Spawning")
+    TSubclassOf<class AEnemyCharacter1> EliteClass;
+
+    /** Your boss variant */
+    UPROPERTY(EditInstanceOnly, Category="Spawning")
+    TSubclassOf<class AEnemyCharacter1> BossClass;
+
+    /** Spawns one regular enemy */
+    UFUNCTION()
+    void SpawnRegular();
+
+    /** Spawns one elite enemy */
+    UFUNCTION()
+    void SpawnElite();
+
+    /** Spawns one boss enemy */
+    UFUNCTION()
+    void SpawnBoss();
 
 protected:
     virtual void BeginPlay() override;
 
-private:
-    /** One timer per entry in SpawnList */
-    TArray<FTimerHandle> SpawnTimers;
+    /** How often to fire off regular spawns */
+    UPROPERTY(EditDefaultsOnly, Category="Spawning")
+    float SpawnInterval = 2.f;
 
-    /** Called by each timer to do a spawn */
-    void SpawnEnemy(int32 Index);
+private:
+    void SpawnByClass(TSubclassOf<class AEnemyCharacter1> ToSpawn);
+
+    FTimerHandle SpawnTimerHandle;
 };

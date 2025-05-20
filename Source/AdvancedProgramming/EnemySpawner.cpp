@@ -1,6 +1,10 @@
 #include "EnemySpawner.h"
 #include "Engine/World.h"
+#include "Engine/Engine.h"
 #include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "EndlessShooterGameMode.h"
+#include "EnemyCharacter1.h"
 
 AEnemySpawner::AEnemySpawner()
 {
@@ -11,49 +15,55 @@ void AEnemySpawner::BeginPlay()
 {
     Super::BeginPlay();
 
-    SpawnTimers.SetNum(SpawnList.Num());
-
-    for (int32 i = 0; i < SpawnList.Num(); ++i)
+    // Register ourselves with the GameMode
+    if (AEndlessShooterGameMode* GM = Cast<AEndlessShooterGameMode>(UGameplayStatics::GetGameMode(this)))
     {
-        if (SpawnList[i].EnemyClass && SpawnList[i].SpawnInterval > 0)
-        {
-            GetWorldTimerManager().SetTimer(
-                SpawnTimers[i],
-                FTimerDelegate::CreateUObject(this, &AEnemySpawner::SpawnEnemy, i),
-                SpawnList[i].SpawnInterval,
-                true
-            );
-        }
+        GM->Spawners.Add(this);
     }
+
+    // Kick off regular spawn timer
+    GetWorldTimerManager().SetTimer(
+        SpawnTimerHandle,
+        this,
+        &AEnemySpawner::SpawnRegular,
+        SpawnInterval,
+        true // loop
+    );
 }
 
-void AEnemySpawner::SpawnEnemy(int32 Index)
+void AEnemySpawner::SpawnRegular()
 {
-    if (!SpawnList.IsValidIndex(Index))
-        return;
+    if (GEngine)
+        GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, TEXT("Spawner → Regular"));
 
-    FSpawnInfo& Info = SpawnList[Index];
+    SpawnByClass(RegularClass);
+}
 
-    // if it's marked as one-shot and we've already done it, clear timer and bail out
-    if (Info.bSpawnOnce && Info.bHasSpawned)
-    {
-        GetWorldTimerManager().ClearTimer(SpawnTimers[Index]);
-        return;
-    }
+void AEnemySpawner::SpawnElite()
+{
+    if (GEngine)
+        GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Cyan, TEXT("Spawner → Elite"));
+
+    SpawnByClass(EliteClass);
+}
+
+void AEnemySpawner::SpawnBoss()
+{
+    if (GEngine)
+        GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Spawner → Boss"));
+
+    SpawnByClass(BossClass);
+}
+
+void AEnemySpawner::SpawnByClass(TSubclassOf<AEnemyCharacter1> ToSpawn)
+{
+    if (!ToSpawn) return;
 
     FActorSpawnParameters Params;
-    Params.Owner = this;
-
-    FVector Loc = GetActorLocation();
-    FRotator Rot = GetActorRotation();
-
-    AActor* Spawned = GetWorld()->SpawnActor<AActor>(Info.EnemyClass, Loc, Rot, Params);
-    if (Spawned)
-    {
-        Info.bHasSpawned = true;
-        if (Info.bSpawnOnce)
-        {
-            GetWorldTimerManager().ClearTimer(SpawnTimers[Index]);
-        }
-    }
+    GetWorld()->SpawnActor<AEnemyCharacter1>(
+        ToSpawn,
+        GetActorLocation(),
+        GetActorRotation(),
+        Params
+    );
 }
