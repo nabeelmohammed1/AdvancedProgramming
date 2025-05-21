@@ -18,6 +18,9 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
     float Damage = 25.f;
+    
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Visual")
+    FLinearColor TintColor = FLinearColor::White;
 
 protected:
     virtual void BeginPlay() override;

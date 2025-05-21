@@ -60,6 +60,10 @@ protected:
     TSubclassOf<class AEnemyProjectile> ProjectileClass;
     UPROPERTY(EditAnywhere, Category="Combat", meta=(EditCondition="bRanged"))
     float ProjectileSpeed = 1200.f;
+    
+    //Timer
+    FTimerHandle PatrolTimerHandle;
+    FTimerHandle AttackTimerHandle;
 
 private:
     APawn* PlayerPawn;

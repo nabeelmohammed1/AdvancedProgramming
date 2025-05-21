@@ -26,6 +26,15 @@ AProjectile::AProjectile()
 void AProjectile::BeginPlay()
 {
     Super::BeginPlay();
+    
+    if (auto Mesh = FindComponentByClass<UStaticMeshComponent>())
+        {
+            // assume your mesh uses a material with a VectorParameter named "Tint"
+            auto Dyn = UMaterialInstanceDynamic::Create(Mesh->GetMaterial(0), this);
+            Mesh->SetMaterial(0, Dyn);
+            Dyn->SetVectorParameterValue(TEXT("TintColor"), TintColor);
+        }
+    
     if (AActor* Owner = GetOwner())
         CollisionComponent->IgnoreActorWhenMoving(Owner, true);
 }

@@ -29,7 +29,11 @@ void AEnemyCharacter1::BeginPlay()
 
     CurrentHealth = BaseHealth * Scale;
     PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
-
+    
+    if (Variant == EEnemyVariant1::Elite || Variant == EEnemyVariant1::Boss)
+       {
+           bRanged = true;
+       }
     // start patrolling
     Patrol();
 }
@@ -75,7 +79,7 @@ void AEnemyCharacter1::Patrol()
         if (auto AIC = Cast<AAIController>(GetController()))
             AIC->MoveToLocation(Dest.Location);
     }
-    GetWorldTimerManager().SetTimer(TimerHandle, this, &AEnemyCharacter1::Patrol, 3.f, false);
+    GetWorldTimerManager().SetTimer(PatrolTimerHandle, this, &AEnemyCharacter1::Patrol, 3.f, false);
 }
 
 void AEnemyCharacter1::OnSeePawn(APawn* Pawn)
@@ -94,11 +98,11 @@ void AEnemyCharacter1::Attack()
         FRotator Aim = (PlayerPawn->GetActorLocation() - Muzzle).Rotation();
         AEnemyProjectile* Proj = GetWorld()->SpawnActor<AEnemyProjectile>(ProjectileClass, Muzzle, Aim);
         if (Proj) Proj->ProjectileMovement->Velocity = Aim.Vector() * ProjectileSpeed;
-        GetWorldTimerManager().SetTimer(TimerHandle, this, &AEnemyCharacter1::Attack, 2.f, false);
+        GetWorldTimerManager().SetTimer(AttackTimerHandle, this, &AEnemyCharacter1::Attack, 2.f, false);
     }
     else if (!bRanged && PlayerPawn)
     {
         UGameplayStatics::ApplyDamage(PlayerPawn, MeleeDamage, GetController(), this, nullptr);
-        GetWorldTimerManager().SetTimer(TimerHandle, this, &AEnemyCharacter1::Attack, 1.5f, false);
+        GetWorldTimerManager().SetTimer(AttackTimerHandle, this, &AEnemyCharacter1::Attack, 1.5f, false);
     }
 }

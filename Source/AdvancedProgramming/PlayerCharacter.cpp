@@ -136,6 +136,9 @@ void APlayerCharacter::FireOneBurstShot()
         return;
     }
 
+    // Calculate which shot this is (0-based):
+    int32 ShotIndex = ShotsPerBurst - BurstShotsRemaining;
+
     FVector Forward = FirstPersonCameraComponent->GetComponentRotation().Vector();
     FVector SpawnLoc = MuzzleLocation->GetComponentLocation();
     FRotator SpawnRot = FirstPersonCameraComponent->GetComponentRotation();
@@ -154,6 +157,21 @@ void APlayerCharacter::FireOneBurstShot()
         Proj->Damage = ProjectileDamage;
         if (auto MoveComp = Proj->FindComponentByClass<UProjectileMovementComponent>())
             MoveComp->Velocity = Forward * MoveComp->InitialSpeed;
+
+        // —— NEW: tinting ——
+        static const FLinearColor Colors[3] = {
+          FLinearColor::Red,
+          FLinearColor::Green,
+          FLinearColor::Blue
+        };
+        FLinearColor Chosen = Colors[FMath::Clamp(ShotIndex, 0, ShotsPerBurst-1)];
+        if (auto MeshComp = Proj->FindComponentByClass<UStaticMeshComponent>())
+        {
+            if (auto DynMat = MeshComp->CreateAndSetMaterialInstanceDynamic(0))
+            {
+                DynMat->SetVectorParameterValue(TEXT("TintColor"), Chosen);
+            }
+        }
     }
 
     BurstShotsRemaining--;
