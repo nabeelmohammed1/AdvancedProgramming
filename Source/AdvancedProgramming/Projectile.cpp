@@ -35,8 +35,8 @@ void AProjectile::BeginPlay()
             Dyn->SetVectorParameterValue(TEXT("TintColor"), TintColor);
         }
     
-    if (AActor* Owner = GetOwner())
-        CollisionComponent->IgnoreActorWhenMoving(Owner, true);
+    if (AActor* MyOwner = GetOwner())
+        CollisionComponent->IgnoreActorWhenMoving(MyOwner, true);
 }
 
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
