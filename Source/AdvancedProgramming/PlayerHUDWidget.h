@@ -26,6 +26,15 @@ public:
     }
 
     UFUNCTION(BlueprintCallable)
+    void UpdateSprint(float Ratio, float Max)
+    {
+        if (SprintBar)
+        {
+            SprintBar->SetPercent(FMath::Clamp(Ratio, 0.0f, 1.0f));
+        }
+    }
+
+    UFUNCTION(BlueprintCallable)
     void UpdateStats(float Damage, int32 Burst)
     {
         if (DamageText)
@@ -42,6 +51,9 @@ protected:
     // these must match your UMG BindWidget names
     UPROPERTY(meta = (BindWidget))
     UProgressBar* HealthBar;
+
+    UPROPERTY(meta = (BindWidget))
+    UProgressBar* SprintBar;
 
     UPROPERTY(meta = (BindWidget))
     UTextBlock* DamageText;

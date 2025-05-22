@@ -19,6 +19,7 @@
 
 APlayerCharacter::APlayerCharacter()
 {
+    PrimaryActorTick.bCanEverTick = true;
     GetCapsuleComponent()->InitCapsuleSize(55.f, 96.f);
 
     FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
@@ -237,4 +238,28 @@ float APlayerCharacter::TakeDamage(float DamageAmount,
         }
         // Optional: play death animation, ragdoll, UI, etc.
         Destroy();
+        UGameplayStatics::SetGamePaused(this, true);
+    }
+
+    void APlayerCharacter::Tick(float DeltaTime)
+    {
+        Super::Tick(DeltaTime);
+
+        if (HUDWidget)
+        {
+            float SprintRatio = 1.0f;
+
+            if (bIsSprinting)
+            {
+                float TimeRemaining = GetWorldTimerManager().GetTimerRemaining(SprintTimerHandle);
+                SprintRatio = TimeRemaining / SprintDuration;
+            }
+            else if (!bCanSprint)
+            {
+                float TimeRemaining = GetWorldTimerManager().GetTimerRemaining(CooldownTimerHandle);
+                SprintRatio = 1.0f - (TimeRemaining / SprintCooldown);
+            }
+
+            HUDWidget->UpdateSprint(SprintRatio, 1.0f);
+        }
     }
