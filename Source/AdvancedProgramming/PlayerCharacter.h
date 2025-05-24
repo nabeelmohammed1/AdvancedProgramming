@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "PlayerCharacter.generated.h"
 
+
 class UCameraComponent;
 class USceneComponent;
 class UInputMappingContext;
@@ -16,6 +17,7 @@ class USoundBase;
 class UAnimMontage;
 class UStaticMeshComponent;
 class UPrimitiveComponent;
+class UUserWidget;
 
 UCLASS(config = Game)
 class ADVANCEDPROGRAMMING_API APlayerCharacter : public ACharacter
@@ -93,6 +95,12 @@ public:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
     UPlayerHUDWidget* HUDWidget;
+    
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+    TSubclassOf<UUserWidget> DeathScreenClass;
+
+    UPROPERTY()
+    UUserWidget* DeathScreenWidget;
 
 protected:
     virtual void NotifyControllerChanged() override;

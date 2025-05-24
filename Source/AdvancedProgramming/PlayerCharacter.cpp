@@ -235,10 +235,20 @@ float APlayerCharacter::TakeDamage(float DamageAmount,
         if (APlayerController* PC = Cast<APlayerController>(GetController()))
         {
             PC->DisableInput(PC);
+
+            if (DeathScreenClass)
+            {
+                DeathScreenWidget = CreateWidget<UUserWidget>(PC, DeathScreenClass);
+                if (DeathScreenWidget)
+                {
+                    DeathScreenWidget->AddToViewport();
+                }
+            }
+
+            UGameplayStatics::SetGamePaused(this, true);
         }
-        // Optional: play death animation, ragdoll, UI, etc.
-        Destroy();
-        UGameplayStatics::SetGamePaused(this, true);
+
+        Destroy(); // Optional: if you're using ragdolls, delay this
     }
 
     void APlayerCharacter::Tick(float DeltaTime)
