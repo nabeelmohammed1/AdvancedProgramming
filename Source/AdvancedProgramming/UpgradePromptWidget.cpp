@@ -40,7 +40,7 @@ void UUpgradePromptWidget::OnHealthClicked()
             // apply health upgrade
             PC->MaxHealth    += 20.f;
             PC->CurrentHealth = PC->MaxHealth;
-
+            PC->HealthUpgradesUsed++;
             // update HUD
             if (PC->HUDWidget)
             {
@@ -62,7 +62,7 @@ void UUpgradePromptWidget::OnWeaponClicked()
         {
             // apply damage upgrade
             PC->ProjectileDamage += 10.f;
-
+            PC->DamageUpgradesUsed++;
             // update HUD
             if (PC->HUDWidget)
             {
@@ -84,7 +84,7 @@ void UUpgradePromptWidget::OnBurstClicked()
         {
             // Increment burst count: 1->2->3 max
             PC->ShotsPerBurst = FMath::Clamp(PC->ShotsPerBurst + 1, 1, 3);
-            
+            PC->BurstUpgradesUsed++;     
             if (PC->HUDWidget)
             {
                 PC->HUDWidget->UpdateStats(PC->ProjectileDamage, PC->ShotsPerBurst);

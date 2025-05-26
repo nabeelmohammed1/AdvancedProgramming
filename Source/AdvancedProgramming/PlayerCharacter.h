@@ -4,6 +4,7 @@
 #include "CoreMinimal.h"
 #include "PlayerHUDWidget.h"
 #include "GameFramework/Character.h"
+#include "DeathWidget.h"
 #include "PlayerCharacter.generated.h"
 
 
@@ -96,11 +97,20 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
     UPlayerHUDWidget* HUDWidget;
     
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
-    TSubclassOf<UUserWidget> DeathScreenClass;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="UI", meta=(AllowPrivateAccess="true"))
+    TSubclassOf<UDeathWidget> DeathWidgetClass;
 
+    /** Instance of the death widget so we can hold on to it */
     UPROPERTY()
-    UUserWidget* DeathScreenWidget;
+    UDeathWidget* DeathWidget;
+
+    // Upgrade usage counters
+    UPROPERTY(VisibleAnywhere, Category="Upgrades")
+    int32 HealthUpgradesUsed = 0;
+    UPROPERTY(VisibleAnywhere, Category="Upgrades")
+    int32 DamageUpgradesUsed = 0;
+    UPROPERTY(VisibleAnywhere, Category="Upgrades")
+    int32 BurstUpgradesUsed = 0;
 
 protected:
     virtual void NotifyControllerChanged() override;

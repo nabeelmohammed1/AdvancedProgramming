@@ -16,6 +16,8 @@
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/PrimitiveComponent.h"
+#include "DeathWidget.h"
+#include "EndlessShooterGameMode.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -232,23 +234,39 @@ float APlayerCharacter::TakeDamage(float DamageAmount,
     
     void APlayerCharacter::Die()
     {
+        // disable gameplay input
         if (APlayerController* PC = Cast<APlayerController>(GetController()))
         {
-            PC->DisableInput(PC);
+            PC->SetCinematicMode(true, false, false, true, true);
 
-            if (DeathScreenClass)
+            // create & show death widget
+            if (DeathWidgetClass)
             {
-                DeathScreenWidget = CreateWidget<UUserWidget>(PC, DeathScreenClass);
-                if (DeathScreenWidget)
+                UDeathWidget* W = CreateWidget<UDeathWidget>(PC, DeathWidgetClass);
+                if (W)
                 {
-                    DeathScreenWidget->AddToViewport();
+                    DeathWidget = W;
+                    W->AddToViewport();
+
+                    // grab kill count
+                    int32 Kills = 0;
+                    if (auto GM = GetWorld()->GetAuthGameMode<AEndlessShooterGameMode>())
+                    {
+                        Kills = GM->GetTotalKills();
+                    }
+                    W->SetStats(Kills, HealthUpgradesUsed, DamageUpgradesUsed, BurstUpgradesUsed);
+
+                    // show cursor & route input to UI
+                    PC->bShowMouseCursor = true;
+                    PC->SetInputMode(FInputModeUIOnly()
+                    .SetWidgetToFocus(W->TakeWidget())
+                    .SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock));
                 }
             }
-
-            UGameplayStatics::SetGamePaused(this, true);
         }
 
-        Destroy(); // Optional: if you're using ragdolls, delay this
+        // pause everything
+        UGameplayStatics::SetGamePaused(this, true);
     }
 
     void APlayerCharacter::Tick(float DeltaTime)

@@ -16,6 +16,17 @@ AEndlessShooterGameMode::AEndlessShooterGameMode()
 void AEndlessShooterGameMode::BeginPlay()
 {
     Super::BeginPlay();
+    
+    // make sure we’re not paused
+        UGameplayStatics::SetGamePaused(this, false);
+
+        // restore input settings
+        if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+        {
+            PC->bShowMouseCursor = false;
+            PC->SetInputMode(FInputModeGameOnly());
+            PC->SetCinematicMode(false, false, false, true, true);
+        }
 
     // Gather every spawner in the world
     for (TActorIterator<AEnemySpawner> It(GetWorld()); It; ++It)

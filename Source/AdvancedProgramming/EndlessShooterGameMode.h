@@ -21,6 +21,9 @@ public:
     /** Called by widget when upgrade selection completes */
     UFUNCTION()
     void NotifyUpgradeComplete();
+    
+    UFUNCTION(BlueprintCallable)
+    int32 GetTotalKills() const { return TotalKills; }
 
     /** Global enemy health scale factor, bumps every KillsPerHealthIncrease */
     UPROPERTY(BlueprintReadOnly, Category="Upgrades|EnemyScaling")
