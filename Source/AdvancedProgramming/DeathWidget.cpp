@@ -16,12 +16,16 @@ bool UDeathWidget::Initialize()
 void UDeathWidget::SetStats(int32 InKills, int32 InHealthUpgrades, int32 InDamageUpgrades, int32 InBurstUpgrades)
 {
   if (KillsText)
+    FString KillString = FString::Printf(TEXT("Total Kills = %d"), InKills);
     KillsText->SetText(FText::AsNumber(InKills));
   if (HealthUpgradesText)
+    FString HealthString = FString::Printf(TEXT("Total Health Upgrades = %d"), InHealthUpgrades);
     HealthUpgradesText->SetText(FText::AsNumber(InHealthUpgrades));
   if (DamageUpgradesText)
+    FString DamageString = FString::Printf(TEXT("Total Health Upgrades = %d"), InDamageUpgrades);
     DamageUpgradesText->SetText(FText::AsNumber(InDamageUpgrades));
   if (BurstUpgradesText)
+    FString BurstString = FString::Printf(TEXT("Total Health Upgrades = %d"), InBurstUpgrades);
     BurstUpgradesText->SetText(FText::AsNumber(InBurstUpgrades));
 }
 
