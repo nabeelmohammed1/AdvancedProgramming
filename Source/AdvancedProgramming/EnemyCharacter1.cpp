@@ -116,14 +116,26 @@ void AEnemyCharacter1::Attack()
 
     if (bRanged && ProjectileClass)
     {
-        FVector Muzzle = GetActorLocation() + FVector(0, 0, 50.f);
-        FRotator Aim = (PlayerPawn->GetActorLocation() - Muzzle).Rotation();
+        FVector Muzzle = GetActorLocation() + FVector(0,0,100.f);
+        FVector Dir    = (PlayerPawn->GetActorLocation() - Muzzle).GetSafeNormal();
+        FRotator AimRot = Dir.Rotation();    // or Dir.ToOrientationRotator()
 
-        AEnemyProjectile* Proj = GetWorld()->SpawnActor<AEnemyProjectile>(ProjectileClass, Muzzle, Aim);
+        // 2) spawn using that FRotator directly
+        FActorSpawnParameters SpawnParams;
+        SpawnParams.Owner       = this;
+        SpawnParams.Instigator  = this;
+
+        AEnemyProjectile* Proj = GetWorld()->SpawnActor<AEnemyProjectile>(
+            ProjectileClass,
+            Muzzle,
+            AimRot,            // ← pass FRotator here, not AimRot.Rotation()
+            SpawnParams
+        );
+
         if (Proj)
         {
-            Proj->ProjectileMovement->Velocity = Aim.Vector() * ProjectileSpeed;
-            UE_LOG(LogTemp, Warning, TEXT("%s fired projectile!"), *GetName());
+            Proj->ProjectileMovement->Velocity = Dir * ProjectileSpeed;
+            UE_LOG(LogTemp, Log, TEXT("%s fired projectile"), *GetName());
         }
 
         GetWorldTimerManager().SetTimer(AttackTimerHandle, this, &AEnemyCharacter1::Attack, 2.f, false);

@@ -13,15 +13,13 @@ public:
     AEnemySpawner();
 
     /** Your base grunt class */
-    UPROPERTY(EditInstanceOnly, Category="Spawning")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Spawning")
     TSubclassOf<class AEnemyCharacter1> RegularClass;
 
-    /** Your elite variant */
-    UPROPERTY(EditInstanceOnly, Category="Spawning")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Spawning")
     TSubclassOf<class AEnemyCharacter1> EliteClass;
 
-    /** Your boss variant */
-    UPROPERTY(EditInstanceOnly, Category="Spawning")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Spawning")
     TSubclassOf<class AEnemyCharacter1> BossClass;
 
     /** Spawns one regular enemy */

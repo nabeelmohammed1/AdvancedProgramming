@@ -6,19 +6,19 @@ AEnemyProjectile::AEnemyProjectile()
 {
     PrimaryActorTick.bCanEverTick = false;
 
-    // Create and configure collision
+    // --- collision setup ---
     CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
     CollisionComp->InitSphereRadius(15.f);
     CollisionComp->SetCollisionProfileName(TEXT("Projectile"));
     CollisionComp->OnComponentHit.AddDynamic(this, &AEnemyProjectile::OnHit);
     RootComponent = CollisionComp;
 
-    // Create movement component
+    // we’ll also ignore the owner once it’s set
+    CollisionComp->SetCanEverAffectNavigation(false);
+    // (we’ll call IgnoreActorWhenMoving in BeginPlay)
+
     ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
-    ProjectileMovement->InitialSpeed = 800.f;
-    ProjectileMovement->MaxSpeed = 800.f;
-    ProjectileMovement->bRotationFollowsVelocity = true;
-    ProjectileMovement->bShouldBounce = false;
+    // … your existing movement setup …
 
     InitialLifeSpan = 5.0f;
 }
@@ -26,16 +26,37 @@ AEnemyProjectile::AEnemyProjectile()
 void AEnemyProjectile::BeginPlay()
 {
     Super::BeginPlay();
+
+    // if owner was set at spawn, ignore it
+    if (GetOwner())
+    {
+        CollisionComp->IgnoreActorWhenMoving(GetOwner(), true);
+    }
+    // also ignore the instigator pawn (just in case)
+    if (GetInstigator())
+    {
+        CollisionComp->IgnoreActorWhenMoving(GetInstigator(), true);
+    }
 }
 
 void AEnemyProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
                              UPrimitiveComponent* OtherComp, FVector NormalImpulse,
                              const FHitResult& Hit)
 {
-    if (OtherActor && OtherActor != this)
+    // only damage things that aren’t me or my owner/instigator
+    if (OtherActor &&
+        OtherActor != this &&
+        OtherActor != GetOwner() &&
+        OtherActor != GetInstigator())
     {
-        // Apply damage
-        UGameplayStatics::ApplyDamage(OtherActor, Damage, GetInstigatorController(), this, nullptr);
+        UGameplayStatics::ApplyDamage(
+            OtherActor,
+            Damage,
+            GetInstigatorController(),
+            this,
+            nullptr
+        );
     }
+
     Destroy();
 }
